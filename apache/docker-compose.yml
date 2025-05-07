@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  namenode:
+    image: apache/hadoop:3.3.6
+    container_name: namenode
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - ./config:/config
+    environment:
+      - HADOOP_CONF_DIR=/config
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        if [ ! -f /tmp/hadoop-root/dfs/name/current/VERSION ]; then
+          echo "Formatting HDFS...";
+          hdfs namenode -format -force -nonInteractive;
+        fi
+        hdfs namenode
+
+  datanode1:
+    image: apache/hadoop:3.3.6
+    container_name: datanode1
+    depends_on:
+      - namenode
+    volumes:
+      - ./config:/config
+    environment:
+      - HADOOP_CONF_DIR=/config
+    entrypoint: ["hdfs", "datanode"]
+
+  datanode2:
+    image: apache/hadoop:3.3.6
+    container_name: datanode2
+    depends_on:
+      - namenode
+    volumes:
+      - ./config:/config
+    environment:
+      - HADOOP_CONF_DIR=/config
+    entrypoint: ["hdfs", "datanode"]
+
+  datanode3:
+    image: apache/hadoop:3.3.6
+    container_name: datanode3
+    depends_on:
+      - namenode
+    volumes:
+      - ./config:/config
+    environment:
+      - HADOOP_CONF_DIR=/config
+    entrypoint: ["hdfs", "datanode"]
