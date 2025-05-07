@@ -1,0 +1,3 @@
+# Pliki konfiguracyjne
+- `apache/config/core-site.xml` - efiniuje podstawowe ustawienia Hadoop, takie jak domyślny system plików (fs.defaultFS), co pozwala systemowi odnaleźć główne miejsce przechowywania danych, np. HDFS.
+- `apache/config/hdfs-site.xml` - zawiera konfiguracje specyficzne dla HDFS, takie jak rozmiar bloku, współczynnik replikacji czy katalogi przechowywania, określające sposób zarządzania i przechowywania danych w klastrze Hadoop.
