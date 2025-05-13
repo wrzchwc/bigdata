@@ -16,10 +16,10 @@ else
   echo "[`date`] mimic_data.csv export FAILED" >> "$LOGFILE"
 fi
 
-if bq extract --destination_format=CSV "$GDELT_TABLE" "$GCS_BUCKET/gdelt_data-*.csv"; then
-  echo "[`date`] gdelt_data export successful (sharded)" >> "$LOGFILE"
+if bq extract --destination_format=CSV "$GDELT_TABLE" "$GCS_BUCKET/gdelt_data.csv"; then
+  echo "[`date`] gdelt_data.csv export successful" >> "$LOGFILE"
 else
-  echo "[`date`] gdelt_data export FAILED" >> "$LOGFILE"
+  echo "[`date`] gdelt_data.csv export FAILED" >> "$LOGFILE"
 fi
 
 if gsutil cp "$GCS_BUCKET/mimic_data.csv" "$LOCAL_DIR/"; then
@@ -28,10 +28,10 @@ else
   echo "[`date`] mimic_data.csv download FAILED" >> "$LOGFILE"
 fi
 
-if gsutil cp "$GCS_BUCKET/gdelt_data-*.csv" "$LOCAL_DIR/"; then
-  echo "[`date`] gdelt_data shards downloaded" >> "$LOGFILE"
+if gsutil cp "$GCS_BUCKET/gdelt_data.csv" "$LOCAL_DIR/"; then
+  echo "[`date`] gdelt_data.csv downloaded" >> "$LOGFILE"
 else
-  echo "[`date`] gdelt_data download FAILED" >> "$LOGFILE"
+  echo "[`date`] gdelt_data.csv download FAILED" >> "$LOGFILE"
 fi
 
 if docker cp "$LOCAL_DIR" "$CONTAINER_NAME:/tmp/"; then
@@ -45,6 +45,7 @@ echo "[\$(date)] HDFS operations started"
 
 hdfs dfs -mkdir -p /project/mimic
 echo "[\$(date)] MIMIC directory created"
+
 hdfs dfs -mkdir -p /project/gdelt
 echo "[\$(date)] GDELT directory created"
 
@@ -54,19 +55,10 @@ else
   echo "[\$(date)] mimic_data.csv HDFS upload FAILED"
 fi
 
-FILES=\$(ls /tmp/bigdata_acquisition/gdelt_data-*.csv 2>/dev/null | wc -l)
-
-if [ "\$FILES" -eq 0 ]; then
-  echo "[\$(date)] No GDELT files found in /tmp/bigdata_acquisition"
+if hdfs dfs -put -f /tmp/bigdata_acquisition/gdelt_data.csv /project/gdelt/; then
+  echo "[\$(date)] gdelt_data.csv saved to HDFS"
 else
-  for f in /tmp/bigdata_acquisition/gdelt_data-*.csv; do
-    echo "[\$(date)] Uploading \$f to HDFS..."
-    if hdfs dfs -D dfs.blocksize=16m -put -f "\$f" /project/gdelt/; then
-      echo "[\$(date)] Uploaded \$f"
-    else
-      echo "[\$(date)] FAILED to upload \$f"
-    fi
-  done
+  echo "[\$(date)] gdelt_data.csv HDFS upload FAILED"
 fi
 
 hdfs dfs -setrep -w 3 /project/mimic/mimic_data.csv
