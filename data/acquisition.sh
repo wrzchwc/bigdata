@@ -61,7 +61,7 @@ if [ "\$FILES" -eq 0 ]; then
 else
   for f in /tmp/bigdata_acquisition/gdelt_data-*.csv; do
     echo "[\$(date)] Uploading \$f to HDFS..."
-    if hdfs dfs -put -f "\$f" /project/gdelt/; then
+    if hdfs dfs -D dfs.blocksize=16m -put -f "\$f" /project/gdelt/; then
       echo "[\$(date)] Uploaded \$f"
     else
       echo "[\$(date)] FAILED to upload \$f"

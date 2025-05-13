@@ -2,12 +2,13 @@ version: '3'
 
 services:
   namenode:
-    image: apache/hadoop:3.3.6
+    image: hadoop-runtime-arm64
     container_name: namenode
     ports:
       - "9870:9870"
       - "9000:9000"
     volumes:
+      - /Users/jakubwierzchowiec/hadoop_storage/namenode:/hadoop/dfs/name
       - ./config:/config
     environment:
       - HADOOP_CONF_DIR=/config
@@ -15,41 +16,64 @@ services:
       - /bin/bash
       - -c
       - |
-        if [ ! -f /tmp/hadoop-root/dfs/name/current/VERSION ]; then
+        if [ ! -f /hadoop/dfs/name/current/VERSION ]; then
           echo "Formatting HDFS...";
           hdfs namenode -format -force -nonInteractive;
         fi
         hdfs namenode
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
 
   datanode1:
-    image: apache/hadoop:3.3.6
+    image: hadoop-runtime-arm64
     container_name: datanode1
     depends_on:
       - namenode
     volumes:
+      - /Users/jakubwierzchowiec/hadoop_storage/datanode-1:/hadoop/dfs/data
       - ./config:/config
     environment:
       - HADOOP_CONF_DIR=/config
     entrypoint: ["hdfs", "datanode"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
 
   datanode2:
-    image: apache/hadoop:3.3.6
+    image: hadoop-runtime-arm64
     container_name: datanode2
     depends_on:
       - namenode
     volumes:
+      - /Users/jakubwierzchowiec/hadoop_storage/datanode-2:/hadoop/dfs/data
       - ./config:/config
     environment:
       - HADOOP_CONF_DIR=/config
     entrypoint: ["hdfs", "datanode"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
 
   datanode3:
-    image: apache/hadoop:3.3.6
+    image: hadoop-runtime-arm64
     container_name: datanode3
     depends_on:
       - namenode
     volumes:
+      - /Users/jakubwierzchowiec/hadoop_storage/datanode-3:/hadoop/dfs/data
       - ./config:/config
     environment:
       - HADOOP_CONF_DIR=/config
     entrypoint: ["hdfs", "datanode"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
