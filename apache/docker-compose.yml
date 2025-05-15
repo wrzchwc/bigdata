@@ -12,15 +12,79 @@ services:
       - ./config:/config
     environment:
       - HADOOP_CONF_DIR=/config
-    entrypoint:
-      - /bin/bash
-      - -c
-      - |
-        if [ ! -f /hadoop/dfs/name/current/VERSION ]; then
-          echo "Formatting HDFS...";
-          hdfs namenode -format -force -nonInteractive;
-        fi
-        hdfs namenode
+    entrypoint: ["/bin/bash", "/config/format-hdfs.sh"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
+  
+  resourcemanager:
+      image: hadoop-runtime-arm64
+      container_name: resourcemanager
+      depends_on:
+        - namenode
+      ports:
+        - "8088:8088"
+      volumes:
+        - ./config:/config
+      environment:
+        - HADOOP_CONF_DIR=/config
+      entrypoint: ["yarn", "resourcemanager"]
+      logging:
+        driver: "json-file"
+        options:
+          max-size: "10m"
+          max-file: "1"
+  
+  nodemanager1:
+    image: hadoop-runtime-arm64
+    ports:
+      - "8042:8042"
+    container_name: nodemanager1
+    depends_on:
+      - resourcemanager
+    volumes:
+      - ./config:/config
+    environment:
+      - HADOOP_CONF_DIR=/config
+    entrypoint: ["yarn", "nodemanager"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
+
+  nodemanager2:
+    image: hadoop-runtime-arm64
+    ports:
+      - "8043:8042"
+    container_name: nodemanager2
+    depends_on:
+      - resourcemanager
+    volumes:
+      - ./config:/config
+    environment:
+      - HADOOP_CONF_DIR=/config
+    entrypoint: ["yarn", "nodemanager"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
+
+  nodemanager3:
+    image: hadoop-runtime-arm64
+    ports:
+      - "8044:8042"
+    container_name: nodemanager3
+    depends_on:
+      - resourcemanager
+    volumes:
+      - ./config:/config
+    environment:
+      - HADOOP_CONF_DIR=/config
+    entrypoint: ["yarn", "nodemanager"]
     logging:
       driver: "json-file"
       options:
@@ -72,6 +136,25 @@ services:
     environment:
       - HADOOP_CONF_DIR=/config
     entrypoint: ["hdfs", "datanode"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
+  
+  jobhistory:
+    image: hadoop-runtime-arm64
+    container_name: jobhistory
+    depends_on:
+      - namenode
+    ports:
+      - "19888:19888"
+    volumes:
+      - ./config:/config
+      - ./logs/jobhistory:/opt/hadoop/logs
+    environment:
+      - HADOOP_CONF_DIR=/config
+    entrypoint: ["mapred", "historyserver"]
     logging:
       driver: "json-file"
       options:

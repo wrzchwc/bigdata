@@ -1,5 +1,5 @@
 #!/bin/bash
 
-source .env
+source ./apache/.env
 
 docker-compose -p $PROJECT down --volumes

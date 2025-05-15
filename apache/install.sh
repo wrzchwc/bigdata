@@ -1,5 +1,5 @@
 #!/bin/bash
 
-source .env
+source ./apache/.env
 
 docker-compose -f ./apache/docker-compose.yml -p $PROJECT up -d
