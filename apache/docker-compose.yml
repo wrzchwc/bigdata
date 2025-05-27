@@ -8,7 +8,7 @@ services:
       - "9870:9870"
       - "9000:9000"
     volumes:
-      - /Users/jakubwierzchowiec/hadoop_storage/namenode:/hadoop/dfs/name
+      - namenode-data:/hadoop/dfs/name
       - ./config:/config
     environment:
       - HADOOP_CONF_DIR=/config
@@ -97,7 +97,7 @@ services:
     depends_on:
       - namenode
     volumes:
-      - /Users/jakubwierzchowiec/hadoop_storage/datanode-1:/hadoop/dfs/data
+      - datanode1-data:/hadoop/dfs/data
       - ./config:/config
     environment:
       - HADOOP_CONF_DIR=/config
@@ -114,7 +114,7 @@ services:
     depends_on:
       - namenode
     volumes:
-      - /Users/jakubwierzchowiec/hadoop_storage/datanode-2:/hadoop/dfs/data
+      - datanode2-data:/hadoop/dfs/data
       - ./config:/config
     environment:
       - HADOOP_CONF_DIR=/config
@@ -131,7 +131,7 @@ services:
     depends_on:
       - namenode
     volumes:
-      - /Users/jakubwierzchowiec/hadoop_storage/datanode-3:/hadoop/dfs/data
+      - datanode3-data:/hadoop/dfs/data
       - ./config:/config
     environment:
       - HADOOP_CONF_DIR=/config
@@ -151,7 +151,7 @@ services:
       - "19888:19888"
     volumes:
       - ./config:/config
-      - ./logs/jobhistory:/opt/hadoop/logs
+      - jobhistory-logs:/opt/hadoop/logs
     environment:
       - HADOOP_CONF_DIR=/config
     entrypoint: ["mapred", "historyserver"]
@@ -160,3 +160,10 @@ services:
       options:
         max-size: "10m"
         max-file: "1"
+
+volumes:
+  namenode-data:
+  datanode1-data:
+  datanode2-data:
+  datanode3-data:
+  jobhistory-logs:
