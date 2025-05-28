@@ -2,7 +2,7 @@
 
 LOGFILE="job_timing.log"
 
-HADOOP_STREAMING_JAR=/hadoop/hadoop-dist/target/hadoop-3.5.0-SNAPSHOT/share/hadoop/tools/lib/hadoop-streaming-3.5.0-SNAPSHOT.jar
+HADOOP_STREAMING_JAR=/opt/hadoop/share/hadoop/tools/lib/hadoop-streaming-3.3.6.jar
 
 INPUT_MIMIC=/project/mimic/mimic_data.csv
 INPUT_GDELT=/project/gdelt/gdelt_data.csv

@@ -2,7 +2,7 @@ version: '3'
 
 services:
   namenode:
-    image: hadoop-runtime-arm64
+    image: hadoop-runtime-arm64:3.3.6
     container_name: namenode
     ports:
       - "9870:9870"
@@ -20,7 +20,7 @@ services:
         max-file: "1"
   
   resourcemanager:
-      image: hadoop-runtime-arm64
+      image: hadoop-runtime-arm64:3.3.6
       container_name: resourcemanager
       depends_on:
         - namenode
@@ -38,7 +38,7 @@ services:
           max-file: "1"
   
   nodemanager1:
-    image: hadoop-runtime-arm64
+    image: hadoop-runtime-arm64:3.3.6
     ports:
       - "8042:8042"
     container_name: nodemanager1
@@ -56,7 +56,7 @@ services:
         max-file: "1"
 
   nodemanager2:
-    image: hadoop-runtime-arm64
+    image: hadoop-runtime-arm64:3.3.6
     ports:
       - "8043:8042"
     container_name: nodemanager2
@@ -74,7 +74,7 @@ services:
         max-file: "1"
 
   nodemanager3:
-    image: hadoop-runtime-arm64
+    image: hadoop-runtime-arm64:3.3.6
     ports:
       - "8044:8042"
     container_name: nodemanager3
@@ -92,7 +92,7 @@ services:
         max-file: "1"
 
   datanode1:
-    image: hadoop-runtime-arm64
+    image: hadoop-runtime-arm64:3.3.6
     container_name: datanode1
     depends_on:
       - namenode
@@ -109,7 +109,7 @@ services:
         max-file: "1"
 
   datanode2:
-    image: hadoop-runtime-arm64
+    image: hadoop-runtime-arm64:3.3.6
     container_name: datanode2
     depends_on:
       - namenode
@@ -126,7 +126,7 @@ services:
         max-file: "1"
 
   datanode3:
-    image: hadoop-runtime-arm64
+    image: hadoop-runtime-arm64:3.3.6
     container_name: datanode3
     depends_on:
       - namenode
@@ -143,7 +143,7 @@ services:
         max-file: "1"
   
   jobhistory:
-    image: hadoop-runtime-arm64
+    image: hadoop-runtime-arm64:3.3.6
     container_name: jobhistory
     depends_on:
       - namenode
@@ -223,8 +223,6 @@ services:
       - |
           echo "Waiting for Namenode to be fully functional and HDFS /tmp permissions to be correct..."
           
-          # Loop until Namenode is out of safemode AND /tmp has the correct 1777 (drwxrwxrwt) permissions.
-          # This specifically addresses the race condition with the namenode's complex startup.
           until hdfs dfsadmin -safemode get | grep -q 'OFF' && \
                 hdfs dfs -ls / | grep 'tmp' | grep -q '^drwxrwxrwt'; do
             echo "Namenode or /tmp permissions not ready. Retrying in 10s..."
@@ -233,13 +231,8 @@ services:
 
           echo "Namenode is ready and /tmp permissions are correct. Ensuring Hive-specific HDFS paths..."
 
-          # Re-apply or confirm /tmp permissions just to be absolutely certain.
-          # This should run as the container's default user (likely root), which has permission.
           hdfs dfs -mkdir -p /tmp || true
           hdfs dfs -chmod 1777 /tmp
-
-          # Ensure /user/hive directory exists and is owned by 'hive' user with full permissions.
-          # Hive uses this for warehouse data, staging, and temporary files.
           hdfs dfs -mkdir -p /user/hive || true
           hdfs dfs -chown hive:hive /user/hive
           hdfs dfs -chmod -R 777 /user/hive # Give full permissions to hive user and group for warehouse etc.
