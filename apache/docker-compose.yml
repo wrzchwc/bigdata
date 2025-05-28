@@ -160,6 +160,58 @@ services:
       options:
         max-size: "10m"
         max-file: "1"
+  
+  hive-metastore-db:
+    image: postgres
+    container_name: hive-metastore-db
+    environment:
+      POSTGRES_DB: metastore
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive
+    volumes:
+      - metastore-db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  
+  hive-metastore:
+    image: my-hive-image:4.0.0
+    container_name: hive-metastore
+    depends_on:
+      - hive-metastore-db
+      - namenode
+    entrypoint: ["/bin/bash", "/opt/hive/conf/init-schema.sh"]
+    environment:
+      HIVE_METASTORE_DB_TYPE: postgres
+      HIVE_METASTORE_DB_HOST: hive-metastore-db
+      HIVE_METASTORE_DB_NAME: metastore
+      HIVE_METASTORE_DB_USER: hive
+      HIVE_METASTORE_DB_PASS: hive
+      SERVICE_NAME: metastore
+      DB_TYPE: postgres
+      SKIP_SCHEMA_INIT: "true"
+      HIVE_CONF_DIR: /opt/hive/conf
+    ports:
+      - "9083:9083"
+    volumes:
+      - ./config:/opt/hive/conf
+      - ./config/postgresql-42.7.5.jar:/opt/hive/lib/postgresql-42.7.5.jar
+  
+  hive-server:
+    image: my-hive-image:4.0.0
+    container_name: hive-server
+    depends_on:
+      - hive-metastore              
+    environment:
+      SERVICE_NAME: hiveserver2       
+      DB_DRIVER: postgres             
+      IS_RESUME: "true"               
+      SERVICE_OPTS: "-Dhive.metastore.uris=thrift://hive-metastore:9083"
+    ports:
+      - "10000:10000"                 
+      - "10002:10002"                 
+    volumes:
+      - ./config:/opt/hive/conf
+      - ./config/postgresql-42.7.5.jar:/opt/hive/lib/postgresql-42.7.5.jar
 
 volumes:
   namenode-data:
@@ -167,3 +219,4 @@ volumes:
   datanode2-data:
   datanode3-data:
   jobhistory-logs:
+  metastore-db:

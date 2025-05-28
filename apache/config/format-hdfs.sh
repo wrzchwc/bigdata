@@ -17,6 +17,9 @@ if [ ! -f "$NAMEDIR/current/VERSION" ]; then
   hdfs dfs -mkdir -p /mr-history/done
   hdfs dfs -chmod -R 1777 /mr-history
   hdfs dfs -chown -R mapred:hadoop /mr-history
+  hdfs dfs -mkdir -p /user/hive/warehouse
+  hdfs dfs -chmod -R 1777 /user/hive/warehouse
+
 
   kill $NAMENODE_PID
   wait $NAMENODE_PID || true
