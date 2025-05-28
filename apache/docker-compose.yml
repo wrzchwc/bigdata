@@ -182,10 +182,11 @@ services:
     entrypoint: ["/bin/bash", "/opt/hive/conf/init-schema.sh"]
     environment:
       HIVE_METASTORE_DB_TYPE: postgres
+      HIVE_METASTORE_DB_PORT: 5432
       HIVE_METASTORE_DB_HOST: hive-metastore-db
       HIVE_METASTORE_DB_NAME: metastore
       HIVE_METASTORE_DB_USER: hive
-      HIVE_METASTORE_DB_PASS: hive
+      HIVE_METASTORE_DB_PASSWORD: hive
       SERVICE_NAME: metastore
       DB_TYPE: postgres
       SKIP_SCHEMA_INIT: "true"
@@ -194,24 +195,64 @@ services:
       - "9083:9083"
     volumes:
       - ./config:/opt/hive/conf
+      - ./config:/opt/hadoop/etc/hadoop
       - ./config/postgresql-42.7.5.jar:/opt/hive/lib/postgresql-42.7.5.jar
   
   hive-server:
     image: my-hive-image:4.0.0
     container_name: hive-server
     depends_on:
-      - hive-metastore              
+      - namenode
+      - hive-metastore
     environment:
-      SERVICE_NAME: hiveserver2       
-      DB_DRIVER: postgres             
-      IS_RESUME: "true"               
-      SERVICE_OPTS: "-Dhive.metastore.uris=thrift://hive-metastore:9083"
+      JAVA_OPTS: "-Xmx1G -Dhive.metastore.uris=thrift://hive-metastore:9083"
+      SERVICE_NAME: hiveserver2
+      DB_DRIVER: postgres
+      IS_RESUME: "true"
     ports:
-      - "10000:10000"                 
-      - "10002:10002"                 
+      - "10000:10000"
+      - "10002:10002"
     volumes:
       - ./config:/opt/hive/conf
+      - ./config:/opt/hadoop/etc/hadoop
       - ./config/postgresql-42.7.5.jar:/opt/hive/lib/postgresql-42.7.5.jar
+
+    entrypoint:
+      - bash
+      - -c
+      - |
+          echo "Waiting for Namenode to be fully functional and HDFS /tmp permissions to be correct..."
+          
+          # Loop until Namenode is out of safemode AND /tmp has the correct 1777 (drwxrwxrwt) permissions.
+          # This specifically addresses the race condition with the namenode's complex startup.
+          until hdfs dfsadmin -safemode get | grep -q 'OFF' && \
+                hdfs dfs -ls / | grep 'tmp' | grep -q '^drwxrwxrwt'; do
+            echo "Namenode or /tmp permissions not ready. Retrying in 10s..."
+            sleep 10;
+          done;
+
+          echo "Namenode is ready and /tmp permissions are correct. Ensuring Hive-specific HDFS paths..."
+
+          # Re-apply or confirm /tmp permissions just to be absolutely certain.
+          # This should run as the container's default user (likely root), which has permission.
+          hdfs dfs -mkdir -p /tmp || true
+          hdfs dfs -chmod 1777 /tmp
+
+          # Ensure /user/hive directory exists and is owned by 'hive' user with full permissions.
+          # Hive uses this for warehouse data, staging, and temporary files.
+          hdfs dfs -mkdir -p /user/hive || true
+          hdfs dfs -chown hive:hive /user/hive
+          hdfs dfs -chmod -R 777 /user/hive # Give full permissions to hive user and group for warehouse etc.
+
+          echo "HDFS setup for HiveServer2 complete. Starting HiveServer2..."
+          exec java ${JAVA_OPTS} \
+          -Dhive.conf.dir=/opt/hive/conf \
+          -Dlog4j.configuration=file:///opt/hive/conf/log4j.properties \
+          -classpath "/opt/hive/lib/*:/opt/hadoop/etc/hadoop:/opt/hadoop/share/hadoop/common/*:/opt/hadoop/share/hadoop/common/lib/*:/opt/hadoop/share/hadoop/hdfs/*:/opt/hadoop/share/hadoop/hdfs/lib/*:/opt/hadoop/share/hadoop/mapreduce/*:/opt/hadoop/share/hadoop/mapreduce/lib/*:/opt/hadoop/share/hadoop/yarn/*:/opt/hadoop/share/hadoop/yarn/lib/*:/opt/tez/*:/opt/tez/lib/*" \
+          org.apache.hive.service.server.HiveServer2
+    command: []
+
+   
 
 volumes:
   namenode-data:

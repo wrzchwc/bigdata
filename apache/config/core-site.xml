@@ -3,4 +3,22 @@
     <name>fs.defaultFS</name>
     <value>hdfs://namenode:9000</value>
   </property>
+  <property>
+    <name>hadoop.security.group.mapping</name>
+    <value>org.apache.hadoop.security.ShellBasedUnixGroupsMapping</value>
+  </property> 
+  <property>
+    <name>hadoop.security.authorization</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>hadoop.proxyuser.hive.hosts</name>
+    <value>*</value>
+    <description>Allow the 'hive' user to impersonate from any host</description>
+  </property>
+  <property>
+    <name>hadoop.proxyuser.hive.groups</name>
+    <value>*</value>
+    <description>Allow the 'hive' user to impersonate users in any group</description>
+  </property>
 </configuration>
