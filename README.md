@@ -7,7 +7,7 @@ Czasy podano w sekundach.
 
 |Etap|MR|HIVE|
 |----|-------|---|
-|`Map MIMIC`|13|111|
-|`MapReduce GDELT`|12|145|
-|`Join MIMIC + GDELT`|4|79|
-|`Final Reduction & Aggregation`|4|109|
+|`Map MIMIC`|57|111|
+|`MapReduce GDELT`|65|145|
+|`Join MIMIC + GDELT`|33|79|
+|`Final Reduction & Aggregation`|32|109|
