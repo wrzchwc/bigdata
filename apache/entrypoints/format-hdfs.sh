@@ -32,6 +32,9 @@ if [ ! -f "$NAMEDIR/current/VERSION" ]; then
   hdfs dfs -chown hive:hive /user/hive/tez/staging
   hdfs dfs -chmod -R 777 /user/hive/tez
 
+  hdfs dfs -mkdir -p /user/spark
+  hdfs dfs -chown spark:spark /user/spark
+
   kill $NAMENODE_PID
   wait $NAMENODE_PID || true
   sleep 5
