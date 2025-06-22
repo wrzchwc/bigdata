@@ -1,3 +1,5 @@
 *.env
 *.log
 .DS_Store
+spark/target
+spark/project/target
