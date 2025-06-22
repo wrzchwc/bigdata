@@ -1,8 +1,10 @@
-DROP TABLE IF EXISTS gdelt_station_summary;
-DROP TABLE IF EXISTS mimic_station_summary;
 DROP TABLE IF EXISTS gdelt;
 DROP TABLE IF EXISTS mimic;
-DROP TABLE IF EXISTS language_station_map;
+DROP TABLE IF EXISTS language_station;
+DROP TABLE IF EXISTS map_mimic;
+DROP TABLE IF EXISTS  map_reduce_gdelt;
+DROP TABLE IF EXISTS join_mimic_plus_gdelt;
+DROP TABLE IF EXISTS final_reduction_and_aggregation;
 
 SET hive.auto.convert.join = false;
 
