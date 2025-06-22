@@ -26,6 +26,7 @@ if docker cp "$LOCAL_DIR" "$CONTAINER_NAME:/tmp/"; then
 else
   echo "[`date`] docker cp FAILED" >> "$LOGFILE"
 fi
+docker cp data/language_map.csv "$CONTAINER_NAME:/tmp/"
 
 docker exec -i "$CONTAINER_NAME" bash <<EOF
 echo "[\$(date)] HDFS operations started"
@@ -35,6 +36,9 @@ echo "[\$(date)] MIMIC directory created"
 
 hdfs dfs -mkdir -p /project/gdelt
 echo "[\$(date)] GDELT directory created"
+
+hdfs dfs -mkdir -p /project/other
+echo "[\$(date)] OTHER directory created"
 
 if hdfs dfs -put -f /tmp/bigdata_acquisition/mimic_data.csv /project/mimic/; then
   echo "[\$(date)] mimic_data.csv saved to HDFS"
@@ -48,8 +52,15 @@ else
   echo "[\$(date)] gdelt_data.csv HDFS upload FAILED"
 fi
 
+if hdfs dfs -D dfs.blocksize=1m -put -f /tmp/language_map.csv /project/other/; then
+  echo "[\$(date)] language_map.csv saved to HDFS"
+else
+  echo "[\$(date)] language_map.csv HDFS upload FAILED"
+fi
+
 hdfs dfs -setrep -w 3 /project/mimic/mimic_data.csv
-hdfs dfs -setrep -w 3 /project/gdelt/gdelt_data-*.csv
+hdfs dfs -setrep -w 3 /project/gdelt/gdelt_data.csv
+hdfs dfs -setrep -w 3 /project/other/language_map.csv
 
 echo "[\$(date)] HDFS operations completed"
 EOF
