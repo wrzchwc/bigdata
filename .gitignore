@@ -1,5 +1,12 @@
 *.env
 *.log
 .DS_Store
+spark/.bloop
 spark/target
 spark/project/target
+spark/project/project
+spark/project/.bloop
+spark/project/metals.sbt
+.idea
+.metals
+.vscode

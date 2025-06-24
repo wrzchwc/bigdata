@@ -21,7 +21,7 @@ CREATE EXTERNAL TABLE mimic (
     discharge_location STRING,
     insurance STRING,
     language STRING,
-    martial_status STRING,
+    marital_status STRING,
     race STRING,
     edregtime TIMESTAMP,
     edouttime TIMESTAMP
@@ -53,7 +53,7 @@ STORED AS TEXTFILE
 LOCATION '/project/other';
 
 CREATE TABLE map_mimic AS
-SELECT gender, anchor_age, admission_type, admission_location, discharge_location, insurance, language, martial_status, race
+SELECT gender, anchor_age, admission_type, admission_location, discharge_location, insurance, language, marital_status, race
 FROM mimic
 WHERE anchor_year_group = '2020 - 2022';
 
@@ -61,6 +61,7 @@ CREATE TABLE map_reduce_gdelt AS
 WITH show_counts AS (
   SELECT Station, Show, COUNT(*) AS show_count
   FROM gdelt
+  WHERE YEAR(MatchDateTimeStamp) BETWEEN 2020 AND 2022
   GROUP BY Station, Show
 ),
 ranked_shows AS (
@@ -71,14 +72,24 @@ SELECT Station, Show, show_count FROM ranked_shows
 WHERE rn = 1;
 
 CREATE TABLE join_mimic_plus_gdelt AS
-SELECT m.gender, m.anchor_age, m.admission_type, m.admission_location, m.discharge_location, m.insurance, m.language, m.martial_status, m.race, l.station
+SELECT 
+  m.gender, 
+  m.anchor_age, 
+  m.admission_type, 
+  m.admission_location, 
+  m.discharge_location, 
+  m.insurance, 
+  m.language, 
+  m.marital_status, 
+  m.race, 
+  COALESCE(l.station, 'CNN') AS station
 FROM map_mimic m
-INNER JOIN language_station l
+LEFT JOIN language_station l
 ON m.language = l.language;
 
 CREATE TABLE final_reduction_and_aggregation AS
-SELECT m.Station, m.Show, m.show_count, ROUND(AVG(j.anchor_age), 2) AS avg_age, j.admission_type, j.admission_location, j.discharge_location, j.insurance, j.language, j.martial_status, j.race
+SELECT m.Station, m.Show, m.show_count, ROUND(AVG(j.anchor_age), 2) AS avg_age, j.admission_type, j.admission_location, j.discharge_location, j.insurance, j.language, j.marital_status, j.race
 FROM join_mimic_plus_gdelt j
 INNER JOIN map_reduce_gdelt m
 ON j.station = m.station
-GROUP BY m.Station, m.Show, m.show_count, j.admission_type, j.admission_location, j.discharge_location, j.insurance, j.language, j.martial_status, j.race;
+GROUP BY m.Station, m.Show, m.show_count, j.admission_type, j.admission_location, j.discharge_location, j.insurance, j.language, j.marital_status, j.race;
