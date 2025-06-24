@@ -19,16 +19,26 @@ object Pipeline {
       .option("inferSchema", "true")
       .csv("hdfs:///project/gdelt")
 
-    val phase1 = mapMimic(mimicDF)
-    val phase2 = mapReduceGdelt(gdeltDF)
-    val phase3 = joinMimicPlusGdelt(phase1, spark)
-    val phase4 = finalReductionAndAggregation(phase2, phase3)
+    val phase1 = logDuration("Map MIMIC")(mapMimic(mimicDF).persist())
+    val phase2 = logDuration("MapReduce GDELT")(mapReduceGdelt(gdeltDF))
+    val phase3 = logDuration("Join MIMIC + GDELT")(joinMimicPlusGdelt(phase1, spark))
+    phase1.unpersist()
+    val phase4 = logDuration("Final Reduction & Aggregation")(finalReductionAndAggregation(phase2, phase3))
 
     phase4.write
       .option("header", "true")
-      .csv("hdfs:///output/most_watched_by_group")
+      .mode("overwrite")
+      .csv("hdfs:///user/spark/output")
 
     spark.stop()
+  }
+
+   def logDuration[T](label: String)(block: => T): T = {
+    val start = System.nanoTime()
+    val result = block
+    val end = System.nanoTime()
+    println(s"TIMELOG: $label: ${(end - start) / 1e9} s")
+    result
   }
 
   def mapMimic(dataFrame: DataFrame): DataFrame  = {
@@ -66,18 +76,18 @@ object Pipeline {
       .csv("hdfs:///project/other/language_map.csv")
       .toDF("language", "station")
     dataFrame
-      .join(langMapDF, dataFrame("language") === langMapDF("language"), "left")
-      .withColumn("station", coalesce(col("station"), lit("CNN")))
+      .join(langMapDF, Seq("language"), "left")
+      .withColumn("Station", coalesce(col("station"), lit("CNN")))
   }
 
   def finalReductionAndAggregation(dataFrame2: DataFrame, dataFrame3: DataFrame): DataFrame = {
     dataFrame2
-      .join(dataFrame3, dataFrame2("language") === dataFrame3("language"))
+      .join(dataFrame3, Seq("Station"))
       .groupBy(
-        "station", 
-        "Show", 
-        "count", 
-        "admission_type", 
+        "Station",
+        "Show",
+        "count",
+        "admission_type",
         "admission_location",
         "discharge_location",
         "insurance",

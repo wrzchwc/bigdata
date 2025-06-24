@@ -3,11 +3,11 @@
 - `apache/config/hdfs-site.xml` - zawiera konfiguracje specyficzne dla HDFS, takie jak rozmiar bloku, współczynnik replikacji czy katalogi przechowywania, określające sposób zarządzania i przechowywania danych w klastrze Hadoop.
 
 # Czasy trwania etapów potoku przetwarzania
-Czasy podano w sekundach.
+Czasy podano w milisekundach.
 
-|Etap|MR|HIVE|
-|----|-------|---|
-|`Map MIMIC`|57|81|
-|`MapReduce GDELT`|65|121|
-|`Join MIMIC + GDELT`|33|66|
-|`Final Reduction & Aggregation`|32|86|
+|Etap|MR|HIVE|Spark|
+|----|-------|---|---|
+|`Map MIMIC`|57000|81000|152|
+|`MapReduce GDELT`|65000|121000|222|
+|`Join MIMIC + GDELT`|33000|66000|806|
+|`Final Reduction & Aggregation`|32000|86000|18|
